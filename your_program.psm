@@ -1,0 +1,152 @@
+;Definicion de puertos.
+CONSTANT  Registro_entrada , 01 ; registro entrada
+CONSTANT  Registro_Salida , 02
+;parte del usart
+CONSTANT PuertoLeeListoTX,    11
+CONSTANT PuertoEscribeDatoTX, 12
+CONSTANT PuertoLeeDatoRX,     13
+CONSTANT PuertoDatoListoRX,   14
+CONSTANT PuertoDatoRXLeido,   15
+      
+;declaración de los registros 
+;NAMEREG s1, R_Contador
+;NAMEREG S2, Registro ;registro para la entrada.
+NAMEREG S3, Reg 
+NAMEREG S4, REG1
+; parte del uart
+NAMEREG s5, DatoSerial
+NAMEREG s6, EstadoTX
+NAMEREG s7, EstadoRX
+ 
+
+;inicio del programa
+      ADDRESS 000 
+Inicio: 
+        INPUT  REG1, Registro_entrada ; registra el estado TX (entrada) en registro
+        AND REG1  , 0F  ;mascara de bits
+  ;LOAD R_Contador, 00    ; registro del contador
+    ;manda la parte del 0A y 0D 
+Loop: 
+; compara el valor de entrada a lo del valor de bits. 
+        COMPARE REG1, 00000000'b 
+        JUMP Inicio
+        COMPARE REG1, 00000001'b ; para esta parte falta 
+        JUMP Z , etiquetaS                    ;letra w 
+        COMPARE REG1, 00000010'b  
+        JUMP Z , etiquetaD                   
+        COMPARE REG1, 00000011'b ; para esta parte falta 
+        JUMP Z , etiquetaDS                    ;letra S 
+        COMPARE REG1, 00000100'b 
+        JUMP Z , etiquetaW                    
+        COMPARE REG1, 00000101'b ; para esta parte falta 
+        JUMP Z , etiquetaWS  
+        COMPARE REG1, 00000110'b 
+        JUMP Z , etiquetaWD  
+        COMPARE REG1, 00000111'b ; para esta parte falta 
+        JUMP Z , etiquetaWDS  
+        COMPARE REG1, 00001000'b 
+        JUMP Z , etiquetaA  
+        COMPARE REG1, 00001001'b ; para esta parte falta 
+        JUMP Z , etiquetaAS
+        COMPARE REG1, 00001010'b 
+        JUMP Inicio
+        COMPARE REG1, 00001011'b ; para esta parte falta 
+        JUMP Inicio
+        COMPARE REG1, 00001100'b 
+        JUMP Z , etiquetaAW
+        COMPARE REG1, 00001101'b ; para esta parte falta 
+        JUMP Z , etiquetaAWS
+        COMPARE REG1, 00001110'b 
+        JUMP Inicio
+        COMPARE REG1, 00001111'b ; para esta parte falta 
+        JUMP Inicio
+
+;declaración de etiquetas y de teclas combinadas 
+;_------------------------------------------     
+etiquetaDS:                  
+    LOAD  DatoSerial , "D" 
+ CALL  tx_uart
+    LOAD  DatoSerial,  "S"
+    CALL  tx_uart
+    JUMP   Inicio
+;   -----------------------------------------
+etiquetaWS: 
+    LOAD  DatoSerial , "W"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "S"
+    CALL  tx_uart
+    JUMP   Inicio
+;------------------------------------------
+etiquetaWD: 
+    LOAD  DatoSerial , "W"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "D" 
+    CALL  tx_uart  
+    JUMP    Inicio
+;-------------------------------------------
+etiquetaWDS:  
+    LOAD  DatoSerial , "W"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "D"
+    CALL  tx_uart
+    LOAD  DatoSerial,  "S"
+    CALL  tx_uart
+    JUMP    Inicio
+;---------------------------------------
+etiquetaAS:
+    LOAD  DatoSerial , "A"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "S"
+    CALL  tx_uart 
+    JUMP      Inicio
+;----------------------------------------
+etiquetaAW:
+    LOAD  DatoSerial , "A"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "W" 
+    CALL  tx_uart
+    JUMP    Inicio
+;-----------------------------------------
+etiquetaAWS:
+    LOAD  DatoSerial , "A"
+ CALL  tx_uart
+    LOAD  DatoSerial,  "W" 
+    CALL  tx_uart
+    LOAD        DatoSerial,   "S"
+    CALL        tx_uart
+    JUMP    Inicio
+;------------------------------------------
+etiquetAW:
+    LOAD  DatoSerial , "A"
+ CALL  tx_uart
+    LOAD  DatoSerial, "W"
+    CALL        tx_uart
+    JUMP    Inicio
+;-------------------------------------------parte movimiento izquierda
+etiquetaA:
+    LOAD  DatoSerial, "A"
+ CALL  tx_uart 
+    JUMP    Inicio
+; ------------------------------------------parte del disparo. 
+etiquetaS:
+    LOAD  DatoSerial, "S"
+ CALL  tx_uart
+    JUMP    Inicio
+
+;-------------------------------------------Parte movimiento a la isquierda.
+etiquetaD:
+    LOAD  DatoSerial, "D"
+ CALL  tx_uart
+    JUMP    Inicio
+etiquetaW:
+    LOAD        DatoSerial, "W"
+    CALL        tx_uart
+    JUMP    Inicio
+;---------------------------------------------------------
+;rutina de transmisi  n del uart
+tx_uart:
+  INPUT  EstadoTX, PuertoLeeListoTX
+  COMPARE  EstadoTX, 01
+  JUMP  Z, tx_uart
+  OUTPUT  DatoSerial, PuertoEscribeDatoTX
+  RETURN
